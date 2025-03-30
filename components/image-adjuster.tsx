@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,9 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import type { ProcessedImage } from "./image-processor";
-import { cn } from "@/lib/utils";
+import { cn, debounce } from "@/lib/utils";
 import { ImageCropper } from "./image-cropper";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ImageAdjusterProps {
   images: ProcessedImage[];
@@ -21,7 +22,8 @@ interface ImageAdjusterProps {
     id: string,
     brightness: number,
     contrast: number,
-    crop?: { x: number; y: number; width: number; height: number } | null
+    crop?: { x: number; y: number; width: number; height: number } | null,
+    extractBlackPixels?: boolean
   ) => void;
   onCropChange: (
     id: string,
@@ -42,6 +44,7 @@ export function ImageAdjuster({
 
   const [brightness, setBrightness] = useState(0);
   const [contrast, setContrast] = useState(0);
+  const [extractBlackPixels, setExtractBlackPixels] = useState(false);
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [activeTab, setActiveTab] = useState("adjust");
 
@@ -49,15 +52,56 @@ export function ImageAdjuster({
     if (selectedImage) {
       setBrightness(selectedImage.brightness);
       setContrast(selectedImage.contrast);
+      setExtractBlackPixels(selectedImage.extractBlackPixels);
     }
   }, [selectedImage]);
 
+  const debouncedAdjustImage = useCallback(
+    debounce(
+      (
+        id: string,
+        brightness: number,
+        contrast: number,
+        extractBlackPixels: boolean
+      ) => {
+        onAdjustImage(id, brightness, contrast, undefined, extractBlackPixels);
+      },
+      300
+    ),
+    [onAdjustImage]
+  );
+
   const handleBrightnessChange = (value: number[]) => {
-    setBrightness(value[0]);
+    if (!selectedImageId) return;
+
+    const newValue = value[0];
+    setBrightness(newValue);
+    debouncedAdjustImage(
+      selectedImageId,
+      newValue,
+      contrast,
+      extractBlackPixels
+    );
   };
 
   const handleContrastChange = (value: number[]) => {
-    setContrast(value[0]);
+    if (!selectedImageId) return;
+
+    const newValue = value[0];
+    setContrast(newValue);
+    debouncedAdjustImage(
+      selectedImageId,
+      brightness,
+      newValue,
+      extractBlackPixels
+    );
+  };
+
+  const handleExtractBlackPixelsChange = (checked: boolean) => {
+    if (!selectedImageId) return;
+
+    setExtractBlackPixels(checked);
+    onAdjustImage(selectedImageId, brightness, contrast, undefined, checked);
   };
 
   const handleBrightnessInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +131,13 @@ export function ImageAdjuster({
   const handleApplyChanges = () => {
     if (selectedImageId) {
       setIsAdjusting(true);
-      onAdjustImage(selectedImageId, brightness, contrast);
+      onAdjustImage(
+        selectedImageId,
+        brightness,
+        contrast,
+        undefined,
+        extractBlackPixels
+      );
       setTimeout(() => setIsAdjusting(false), 500);
     }
   };
@@ -103,7 +153,13 @@ export function ImageAdjuster({
   const handleApplyCrop = () => {
     if (selectedImageId && selectedImage) {
       setIsAdjusting(true);
-      onAdjustImage(selectedImageId, brightness, contrast, selectedImage.crop);
+      onAdjustImage(
+        selectedImageId,
+        brightness,
+        contrast,
+        selectedImage.crop,
+        extractBlackPixels
+      );
       setTimeout(() => setIsAdjusting(false), 500);
     }
   };
@@ -211,6 +267,18 @@ export function ImageAdjuster({
                     value={[contrast]}
                     onValueChange={handleContrastChange}
                   />
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="extractBlackPixels"
+                    checked={extractBlackPixels}
+                    onCheckedChange={handleExtractBlackPixelsChange}
+                    disabled={selectedImage.isProcessing || isAdjusting}
+                  />
+                  <Label htmlFor="extractBlackPixels">
+                    Extract Black Pixels
+                  </Label>
                 </div>
 
                 <Button
