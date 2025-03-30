@@ -2,6 +2,9 @@
 
 import type { ProcessedImage } from "./image-processor";
 import { cn } from "@/lib/utils";
+import { downloadImage } from "@/lib/download-utils";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 interface ImagePreviewProps {
   images: ProcessedImage[];
@@ -16,10 +19,45 @@ export function ImagePreview({
 }: ImagePreviewProps) {
   const selectedImage = images.find((img) => img.id === selectedImageId);
 
+  const handleDownloadAll = () => {
+    images.forEach((image, index) => {
+      if (image.processedUrl) {
+        setTimeout(() => {
+          downloadImage(
+            image.processedUrl!,
+            `processed-image-${index + 1}.jpg`
+          );
+        }, index * 500); // Stagger downloads to avoid browser limitations
+      }
+    });
+  };
+
+  const handleDownloadSelected = () => {
+    if (selectedImage?.processedUrl) {
+      downloadImage(
+        selectedImage.processedUrl,
+        `processed-image-${selectedImage.id}.jpg`
+      );
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-sm font-medium">All Processed Images</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-medium">All Processed Images</h3>
+          {images.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadAll}
+              className="flex items-center gap-1"
+            >
+              <Download className="h-4 w-4" />
+              <span>Download All</span>
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {images.map((image) => (
             <div
@@ -53,6 +91,17 @@ export function ImagePreview({
                 alt="Processed"
                 className="w-full h-full object-contain"
               />
+              <div className="absolute top-2 right-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleDownloadSelected}
+                  className="flex items-center gap-1"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

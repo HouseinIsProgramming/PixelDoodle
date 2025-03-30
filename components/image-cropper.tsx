@@ -379,7 +379,7 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between">
         {/* Input fields remain the same */}
-        <div className="grid grid-cols-[2fr_1fr] items-end gap-4 mb-4">
+        <div className="grid md:grid-cols-[2fr_1fr] items-end gap-4 mb-4">
           <div className="space-y-2">
             <Label htmlFor="width">Width (px)</Label>
             <Input
