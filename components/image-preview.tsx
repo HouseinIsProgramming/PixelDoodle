@@ -1,19 +1,49 @@
-"use client"
+"use client";
 
-import type { ProcessedImage } from "./image-processor"
-import { cn } from "@/lib/utils"
+import type { ProcessedImage } from "./image-processor";
+import { cn } from "@/lib/utils";
 
 interface ImagePreviewProps {
-  images: ProcessedImage[]
-  selectedImageId: string | null
-  onSelectImage: (id: string) => void
+  images: ProcessedImage[];
+  selectedImageId: string | null;
+  onSelectImage: (id: string) => void;
 }
 
-export function ImagePreview({ images, selectedImageId, onSelectImage }: ImagePreviewProps) {
-  const selectedImage = images.find((img) => img.id === selectedImageId)
+export function ImagePreview({
+  images,
+  selectedImageId,
+  onSelectImage,
+}: ImagePreviewProps) {
+  const selectedImage = images.find((img) => img.id === selectedImageId);
 
   return (
     <div className="space-y-6">
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium">All Processed Images</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {images.map((image) => (
+            <div
+              key={image.id}
+              className={cn(
+                "cursor-pointer rounded-md overflow-hidden border-2",
+                selectedImageId === image.id
+                  ? "border-primary"
+                  : "border-transparent hover:border-primary/50"
+              )}
+              onClick={() => onSelectImage(image.id)}
+            >
+              <div className="aspect-square">
+                <img
+                  src={image.processedUrl || "/placeholder.svg"}
+                  alt="Processed thumbnail"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {selectedImage && (
         <div className="flex flex-col md:flex-row gap-6">
           <div className="w-full space-y-4">
@@ -60,31 +90,6 @@ export function ImagePreview({ images, selectedImageId, onSelectImage }: ImagePr
           </div>
         </div>
       )}
-
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">All Processed Images</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {images.map((image) => (
-            <div
-              key={image.id}
-              className={cn(
-                "cursor-pointer rounded-md overflow-hidden border-2",
-                selectedImageId === image.id ? "border-primary" : "border-transparent hover:border-primary/50",
-              )}
-              onClick={() => onSelectImage(image.id)}
-            >
-              <div className="aspect-square">
-                <img
-                  src={image.processedUrl || "/placeholder.svg"}
-                  alt="Processed thumbnail"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
-  )
+  );
 }
-
