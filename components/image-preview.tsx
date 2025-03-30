@@ -3,8 +3,10 @@
 import type { ProcessedImage } from "./image-processor";
 import { cn } from "@/lib/utils";
 import { downloadImage } from "@/lib/download-utils";
+import { downloadImagesAsZip } from "@/lib/zip-utils";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { useState } from "react";
 
 interface ImagePreviewProps {
   images: ProcessedImage[];
@@ -18,18 +20,26 @@ export function ImagePreview({
   onSelectImage,
 }: ImagePreviewProps) {
   const selectedImage = images.find((img) => img.id === selectedImageId);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownloadAll = () => {
-    images.forEach((image, index) => {
-      if (image.processedUrl) {
-        setTimeout(() => {
-          downloadImage(
-            image.processedUrl!,
-            `processed-image-${index + 1}.jpg`
-          );
-        }, index * 500); // Stagger downloads to avoid browser limitations
-      }
-    });
+  const handleDownloadAll = async () => {
+    if (images.length === 0) return;
+
+    setIsDownloading(true);
+    try {
+      const imagesToDownload = images
+        .filter((image) => image.processedUrl)
+        .map((image, index) => ({
+          url: image.processedUrl!,
+          filename: `processed-image-${index + 1}.jpg`,
+        }));
+
+      await downloadImagesAsZip(imagesToDownload, "pixel-doodle-images.zip");
+    } catch (error) {
+      console.error("Error downloading images as zip:", error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleDownloadSelected = () => {
@@ -51,10 +61,13 @@ export function ImagePreview({
               variant="outline"
               size="sm"
               onClick={handleDownloadAll}
+              disabled={isDownloading}
               className="flex items-center gap-1"
             >
               <Download className="h-4 w-4" />
-              <span>Download All</span>
+              <span>
+                {isDownloading ? "Creating ZIP..." : "Download All as ZIP"}
+              </span>
             </Button>
           )}
         </div>
