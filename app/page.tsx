@@ -14,14 +14,14 @@ export default function Home() {
           alt="Pixel Logo"
           width={50}
           height={100}
-          className="flex-shrink flex-grow max-w-[33%]"
+          className="flex-shrink flex-grow max-w-[33%] md:max-w-[15%]"
           priority
         />
         <Image
           src="/Doodle.svg"
           alt="Doodle Logo"
           width={50}
-          className="flex-shrink flex-grow max-w-[33%]"
+          className="flex-shrink flex-grow max-w-[33%] md:max-w-[15%]"
           height={120}
           priority
         />
