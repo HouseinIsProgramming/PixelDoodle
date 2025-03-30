@@ -6,7 +6,17 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ZoomIn, ZoomOut, RotateCcw, Lock, Unlock } from "lucide-react";
+import {
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Unlink,
+  Link,
+  Plus,
+  Minus,
+  ArrowUp10,
+  ArrowDown10,
+} from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -276,14 +286,81 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     onCropChange(newCrop);
     setError(null);
   };
-  // --- End Width/Height Input Handlers ---
 
-  // Toggle aspect ratio lock
+  const handleWidthIncrease = (amount: number) => {
+    if (!crop) return;
+
+    const newWidth = Math.min(crop.width + amount, imageSize.width);
+    let newHeight = crop.height;
+
+    // If aspect ratio is locked, adjust height proportionally
+    if (lockAspectRatio) {
+      newHeight = newWidth / aspectRatio;
+      if (newHeight > imageSize.height) {
+        setError(`Resulting height would exceed image height`);
+        return;
+      }
+    }
+
+    let newX = crop.x;
+    let newY = crop.y;
+
+    if (newX + newWidth > imageSize.width) {
+      newX = Math.max(0, imageSize.width - newWidth);
+    }
+
+    if (newY + newHeight > imageSize.height) {
+      newY = Math.max(0, imageSize.height - newHeight);
+    }
+
+    const newCrop = { x: newX, y: newY, width: newWidth, height: newHeight };
+    setCrop(newCrop);
+    onCropChange(newCrop);
+
+    setWidthInput(Math.round(newWidth).toString());
+    setHeightInput(Math.round(newHeight).toString());
+    setError(null);
+  };
+
+  const handleHeightIncrease = (amount: number) => {
+    if (!crop) return;
+
+    const newHeight = Math.min(crop.height + amount, imageSize.height);
+    let newWidth = crop.width;
+
+    // If aspect ratio is locked, adjust width proportionally
+    if (lockAspectRatio) {
+      newWidth = newHeight * aspectRatio;
+      if (newWidth > imageSize.width) {
+        setError(`Resulting width would exceed image width`);
+        return;
+      }
+    }
+
+    let newX = crop.x;
+    let newY = crop.y;
+
+    if (newX + newWidth > imageSize.width) {
+      newX = Math.max(0, imageSize.width - newWidth);
+    }
+
+    if (newY + newHeight > imageSize.height) {
+      newY = Math.max(0, imageSize.height - newHeight);
+    }
+
+    const newCrop = { x: newX, y: newY, width: newWidth, height: newHeight };
+    setCrop(newCrop);
+    onCropChange(newCrop);
+
+    setWidthInput(Math.round(newWidth).toString());
+    setHeightInput(Math.round(newHeight).toString());
+    setError(null);
+  };
+
   const toggleAspectRatioLock = () => {
     setLockAspectRatio(!lockAspectRatio);
   };
 
-  // Handle zoom in/out/reset remain the same
   const handleZoomIn = () => {
     setScale((prev) => Math.min(prev * 1.25, 5)); // Example: Max zoom 5x
   };
@@ -300,9 +377,131 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
 
   return (
     <div className="space-y-4">
-      {/* Top controls remain the same */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex space-x-2">
+      <div className="flex flex-col md:flex-row justify-between">
+        {/* Input fields remain the same */}
+        <div className="grid grid-cols-[2fr_1fr] items-end gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="width">Width (px)</Label>
+            <Input
+              id="width"
+              type="number"
+              value={widthInput}
+              onChange={handleWidthChange}
+              min="1"
+              max={imageSize.width.toString()}
+            />
+          </div>
+
+          <div className="flex mb-0.5">
+            <Button
+              variant="outline"
+              onClick={() => handleWidthIncrease(50)}
+              className="!rounded-r-none"
+              size="sm"
+            >
+              +50
+            </Button>
+            <Button
+              className="!rounded-l-none !rounded-r-none"
+              variant={"outline"}
+              onClick={() => handleWidthIncrease(100)}
+              size="sm"
+            >
+              +100
+            </Button>
+            <Button
+              className="!rounded-l-none !rounded-r-none"
+              variant={"outline"}
+              onClick={() => handleWidthIncrease(-50)}
+              size="sm"
+            >
+              -50
+            </Button>
+            <Button
+              className="!rounded-l-none"
+              variant={"outline"}
+              onClick={() => handleWidthIncrease(-100)}
+              size="sm"
+            >
+              -100
+            </Button>
+          </div>
+
+          <div className="space-y-2 relative">
+            <Label htmlFor="height">Height (px)</Label>
+            <div className="mb-1 absolute right-0 -z-0 bottom-[46px]">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleAspectRatioLock}
+                      className={lockAspectRatio ? "bg-primary/10" : ""}
+                    >
+                      {lockAspectRatio ? (
+                        <Link className="h-4 w-4" />
+                      ) : (
+                        <Unlink className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {lockAspectRatio
+                      ? "Aspect ratio is locked..."
+                      : "Aspect ratio is unlocked..."}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <Input
+              className="z-10 relative"
+              id="height"
+              type="number"
+              value={heightInput}
+              onChange={handleHeightChange}
+              min="1"
+              max={imageSize.height.toString()}
+            />
+          </div>
+          <div className="flex mb-0.5">
+            <Button
+              variant="outline"
+              onClick={() => handleHeightIncrease(50)}
+              className="!rounded-r-none"
+              size="sm"
+            >
+              +50
+            </Button>
+            <Button
+              className="!rounded-l-none !rounded-r-none"
+              variant={"outline"}
+              onClick={() => handleHeightIncrease(100)}
+              size="sm"
+            >
+              +100
+            </Button>
+            <Button
+              className="!rounded-l-none !rounded-r-none"
+              variant={"outline"}
+              onClick={() => handleHeightIncrease(-50)}
+              size="sm"
+            >
+              -50
+            </Button>
+            <Button
+              className="!rounded-l-none"
+              variant={"outline"}
+              onClick={() => handleHeightIncrease(-100)}
+              size="sm"
+            >
+              -100
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid mt-8 mb-2">
           <Button variant="outline" size="sm" onClick={handleZoomIn}>
             <ZoomIn className="h-4 w-4 mr-1" /> Zoom In
           </Button>
@@ -312,58 +511,6 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
           <Button variant="outline" size="sm" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-1" /> Reset
           </Button>
-        </div>
-        <div className="flex items-center space-x-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleAspectRatioLock}
-                  className={lockAspectRatio ? "bg-primary/10" : ""}
-                >
-                  {lockAspectRatio ? (
-                    <Lock className="h-4 w-4 mr-1" />
-                  ) : (
-                    <Unlock className="h-4 w-4 mr-1" />
-                  )}{" "}
-                  {lockAspectRatio ? "Locked" : "Unlocked"}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {lockAspectRatio
-                  ? "Aspect ratio is locked..."
-                  : "Aspect ratio is unlocked..."}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      </div>
-
-      {/* Input fields remain the same */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="space-y-2">
-          <Label htmlFor="width">Width (px)</Label>
-          <Input
-            id="width"
-            type="number"
-            value={widthInput}
-            onChange={handleWidthChange}
-            min="1"
-            max={imageSize.width.toString()}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="height">Height (px)</Label>
-          <Input
-            id="height"
-            type="number"
-            value={heightInput}
-            onChange={handleHeightChange}
-            min="1"
-            max={imageSize.height.toString()}
-          />
         </div>
       </div>
 
