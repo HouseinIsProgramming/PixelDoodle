@@ -4,8 +4,10 @@
 /node_modules
 
 # next.js
+/.nextbackup
 /.next/
 /out/
+/outbackup/
 
 # production
 /build

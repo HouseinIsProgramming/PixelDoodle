@@ -1,6 +1,9 @@
 import { ImageProcessor } from "@/components/image-processor";
 import Image from "next/image";
 
+import pixelsvg from "../app/Pixel.svg";
+import doodlesvg from "../app/Doodle.svg";
+
 export default function Home() {
   return (
     <main className="container mx-auto py-8 px-4">
@@ -10,15 +13,15 @@ export default function Home() {
 
       <div className="flex mt-12 justify-center items-center mb-6">
         <Image
-          src="/Pixel.svg"
-          alt="Pixel Logo"
+          src={pixelsvg}
+          alt=""
           width={50}
           height={100}
           className="flex-shrink flex-grow max-w-[33%] md:max-w-[15%]"
           priority
         />
         <Image
-          src="/Doodle.svg"
+          src={doodlesvg}
           alt="Doodle Logo"
           width={50}
           className="flex-shrink flex-grow max-w-[33%] md:max-w-[15%]"

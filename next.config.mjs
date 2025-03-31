@@ -21,6 +21,8 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  output: "export",
+  basePath: "/pixeldoodle",
 };
 
 mergeConfig(nextConfig, userConfig);
