@@ -6,17 +6,8 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Unlink,
-  Link,
-  Plus,
-  Minus,
-  ArrowUp10,
-  ArrowDown10,
-} from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ZoomIn, ZoomOut, RotateCcw, Unlink, Link } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,9 +22,6 @@ interface ImageCropperProps {
   ) => void;
 }
 
-// No longer need ResizeHandle type
-// type ResizeHandle = ... | null;
-
 export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -44,8 +32,6 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     height: number;
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  // REMOVED: isResizing state
-  // const [isResizing, setIsResizing] = useState<ResizeHandle>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [scale, setScale] = useState(1);
@@ -54,6 +40,8 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
   const [widthInput, setWidthInput] = useState("");
   const [heightInput, setHeightInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [widthPercentage, setWidthPercentage] = useState(60); // Default 60% of image width
+  const [heightPercentage, setHeightPercentage] = useState(60); // Default 60% of image height
 
   // Initialize crop area when image loads
   useEffect(() => {
@@ -81,10 +69,10 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     setAspectRatio(originalAspectRatio);
 
     // Set crop to 60% of image dimensions, centered (or adjust as needed)
-    const cropWidth = Math.round(imgWidth * 0.6);
-    const cropHeight = Math.round(cropWidth / originalAspectRatio);
-    const x = Math.round((imgWidth - cropWidth) / 2);
-    const y = Math.round((imgHeight - cropHeight) / 2);
+    const cropWidth = Math.floor(imgWidth * 0.6);
+    const cropHeight = Math.floor(cropWidth / originalAspectRatio);
+    const x = Math.floor((imgWidth - cropWidth) / 2);
+    const y = Math.floor((imgHeight - cropHeight) / 2);
 
     const newCrop = { x, y, width: cropWidth, height: cropHeight };
     setCrop(newCrop);
@@ -92,8 +80,9 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
 
     setWidthInput(cropWidth.toString());
     setHeightInput(cropHeight.toString());
+    setWidthPercentage(60); // Initialize slider to 60%
+    setHeightPercentage(60); // Initialize slider to 60%
 
-    // Keep initial scale calculation if you implemented it, otherwise set to 1
     const container = containerRef.current;
     if (container) {
       const containerWidth = container.clientWidth;
@@ -125,17 +114,14 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
 
     const rect = container.getBoundingClientRect();
 
-    // Calculate the offset from container edges to the centered image
     const containerCenterX = rect.width / 2;
     const containerCenterY = rect.height / 2;
 
-    // Adjust mouse coordinates to the image's coordinate system
     const x =
       (e.clientX - rect.left - containerCenterX) / scale + imageSize.width / 2;
     const y =
       (e.clientY - rect.top - containerCenterY) / scale + imageSize.height / 2;
 
-    // Check if click is inside crop area using proper bounds
     if (
       x >= crop.x &&
       x <= crop.x + crop.width &&
@@ -157,21 +143,17 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
 
     const rect = container.getBoundingClientRect();
 
-    // Calculate the offset from container edges to the centered image
     const containerCenterX = rect.width / 2;
     const containerCenterY = rect.height / 2;
 
-    // Adjust mouse coordinates to the image's coordinate system
     const x =
       (e.clientX - rect.left - containerCenterX) / scale + imageSize.width / 2;
     const y =
       (e.clientY - rect.top - containerCenterY) / scale + imageSize.height / 2;
 
-    // Calculate new top-left position based on drag start offset
     let newX = x - dragStart.x;
     let newY = y - dragStart.y;
 
-    // Constrain to image bounds
     newX = Math.max(0, Math.min(newX, imageSize.width - crop.width));
     newY = Math.max(0, Math.min(newY, imageSize.height - crop.height));
 
@@ -185,33 +167,22 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
   const handleMouseUp = () => {
     if (isDragging) {
       setIsDragging(false);
-      // Reset cursor if needed (or handle in mouse leave/move)
       if (containerRef.current) containerRef.current.style.cursor = "default";
     }
-    // REMOVED: setIsResizing(null);
   };
 
   // Handle mouse leaving the container
   const handleMouseLeave = () => {
     if (isDragging) {
       setIsDragging(false);
-      // Consider resetting cursor here as well
       if (containerRef.current) containerRef.current.style.cursor = "default";
     }
   };
 
-  // REMOVED: getCursorStyle function
-  // const getCursorStyle = ...
-
-  // REMOVED: handleMouseMoveForCursor function
-  // const handleMouseMoveForCursor = ...
-
-  // --- Width/Height Input Handlers remain the same ---
   const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWidthInput(e.target.value);
     if (!crop) return;
     const width = Number.parseInt(e.target.value);
-    // ... (rest of validation and update logic remains the same) ...
     if (isNaN(width) || width <= 0) {
       setError("Width must be a positive number");
       return;
@@ -251,7 +222,6 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     setHeightInput(e.target.value);
     if (!crop) return;
     const height = Number.parseInt(e.target.value);
-    // ... (rest of validation and update logic remains the same) ...
     if (isNaN(height) || height <= 0) {
       setError("Height must be a positive number");
       return;
@@ -287,19 +257,25 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     setError(null);
   };
 
-  const handleWidthIncrease = (amount: number) => {
-    if (!crop) return;
+  const handleWidthSliderChange = (value: number[]) => {
+    if (!crop || !imageSize.width) return;
 
-    const newWidth = Math.min(crop.width + amount, imageSize.width);
+    const percentage = Math.floor(value[0]); // Round down to nearest integer
+    setWidthPercentage(percentage);
+
+    const newWidth = Math.floor((imageSize.width * percentage) / 100);
     let newHeight = crop.height;
 
-    // If aspect ratio is locked, adjust height proportionally
     if (lockAspectRatio) {
-      newHeight = newWidth / aspectRatio;
+      newHeight = Math.floor(newWidth / aspectRatio);
       if (newHeight > imageSize.height) {
         setError(`Resulting height would exceed image height`);
         return;
       }
+      const newHeightPercentage = Math.floor(
+        (newHeight / imageSize.height) * 100
+      );
+      setHeightPercentage(newHeightPercentage);
     }
 
     let newX = crop.x;
@@ -317,24 +293,28 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     setCrop(newCrop);
     onCropChange(newCrop);
 
-    setWidthInput(Math.round(newWidth).toString());
-    setHeightInput(Math.round(newHeight).toString());
+    setWidthInput(Math.floor(newWidth).toString());
+    setHeightInput(Math.floor(newHeight).toString());
     setError(null);
   };
 
-  const handleHeightIncrease = (amount: number) => {
-    if (!crop) return;
+  const handleHeightSliderChange = (value: number[]) => {
+    if (!crop || !imageSize.height) return;
 
-    const newHeight = Math.min(crop.height + amount, imageSize.height);
+    const percentage = Math.floor(value[0]); // Round down to nearest integer
+    setHeightPercentage(percentage);
+
+    const newHeight = Math.floor((imageSize.height * percentage) / 100);
     let newWidth = crop.width;
 
-    // If aspect ratio is locked, adjust width proportionally
     if (lockAspectRatio) {
-      newWidth = newHeight * aspectRatio;
+      newWidth = Math.floor(newHeight * aspectRatio);
       if (newWidth > imageSize.width) {
         setError(`Resulting width would exceed image width`);
         return;
       }
+      const newWidthPercentage = Math.floor((newWidth / imageSize.width) * 100);
+      setWidthPercentage(newWidthPercentage);
     }
 
     let newX = crop.x;
@@ -352,8 +332,8 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
     setCrop(newCrop);
     onCropChange(newCrop);
 
-    setWidthInput(Math.round(newWidth).toString());
-    setHeightInput(Math.round(newHeight).toString());
+    setWidthInput(Math.floor(newWidth).toString());
+    setHeightInput(Math.floor(newHeight).toString());
     setError(null);
   };
 
@@ -362,10 +342,10 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
   };
 
   const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev * 1.25, 5)); // Example: Max zoom 5x
+    setScale((prev) => Math.min(prev * 1.25, 5));
   };
   const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev * 0.8, 0.1)); // Example: Min zoom 0.1x
+    setScale((prev) => Math.max(prev * 0.8, 0.1));
   };
   const handleReset = () => {
     const img = imageRef.current;
@@ -378,9 +358,8 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row justify-between">
-        {/* Input fields remain the same */}
-        <div className="grid md:grid-cols-[2fr_1fr] items-end gap-4 mb-4">
-          <div className="space-y-2">
+        <div className="grid md:grid-cols-[2fr_1fr] w-full mr-12 items-end gap-4 mb-4">
+          <div className="">
             <Label htmlFor="width">Width (px)</Label>
             <Input
               id="width"
@@ -392,39 +371,24 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
             />
           </div>
 
-          <div className="flex mb-0.5">
-            <Button
-              variant="outline"
-              onClick={() => handleWidthIncrease(50)}
-              className="!rounded-r-none"
-              size="sm"
-            >
-              +50
-            </Button>
-            <Button
-              className="!rounded-l-none !rounded-r-none"
-              variant={"outline"}
-              onClick={() => handleWidthIncrease(100)}
-              size="sm"
-            >
-              +100
-            </Button>
-            <Button
-              className="!rounded-l-none !rounded-r-none"
-              variant={"outline"}
-              onClick={() => handleWidthIncrease(-50)}
-              size="sm"
-            >
-              -50
-            </Button>
-            <Button
-              className="!rounded-l-none"
-              variant={"outline"}
-              onClick={() => handleWidthIncrease(-100)}
-              size="sm"
-            >
-              -100
-            </Button>
+          <div className="flex flex-col gap-1 ">
+            <div className="text-xs text-muted-foreground flex justify-center justify-between">
+              <span>10%</span>
+              <span>100%</span>
+            </div>
+            <div className="flex gap-1 items-baseline">
+              <Slider
+                value={[widthPercentage]}
+                onValueChange={handleWidthSliderChange}
+                min={10}
+                max={100}
+                step={1}
+                className="mt-2"
+              />
+              <div className="text-xs text-center text-muted-foreground">
+                {widthPercentage}%
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2 relative">
@@ -465,39 +429,25 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
               max={imageSize.height.toString()}
             />
           </div>
-          <div className="flex mb-0.5">
-            <Button
-              variant="outline"
-              onClick={() => handleHeightIncrease(50)}
-              className="!rounded-r-none"
-              size="sm"
-            >
-              +50
-            </Button>
-            <Button
-              className="!rounded-l-none !rounded-r-none"
-              variant={"outline"}
-              onClick={() => handleHeightIncrease(100)}
-              size="sm"
-            >
-              +100
-            </Button>
-            <Button
-              className="!rounded-l-none !rounded-r-none"
-              variant={"outline"}
-              onClick={() => handleHeightIncrease(-50)}
-              size="sm"
-            >
-              -50
-            </Button>
-            <Button
-              className="!rounded-l-none"
-              variant={"outline"}
-              onClick={() => handleHeightIncrease(-100)}
-              size="sm"
-            >
-              -100
-            </Button>
+
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-muted-fs flex justify-between">
+              <span>10%</span>
+              <span>100%</span>
+            </div>
+            <div className="flex gap-1 items-baseline ">
+              <Slider
+                value={[heightPercentage]}
+                onValueChange={handleHeightSliderChange}
+                min={10}
+                max={100}
+                step={1}
+                className="mt-2"
+              />
+              <div className="text-xs text-center text-muted-foreground">
+                {heightPercentage}%
+              </div>
+            </div>
           </div>
         </div>
 
@@ -514,24 +464,21 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
         </div>
       </div>
 
-      {/* Error display remains the same */}
       {error && (
         <div className="bg-destructive/10 text-destructive text-sm p-2 rounded-md mb-4">
           {error}
         </div>
       )}
 
-      {/* Image container */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden bg-black/10 rounded-lg cursor-move" // Default cursor can be 'move' now or set in handleMouseDown
+        className="relative overflow-hidden bg-black/10 rounded-lg cursor-move"
         style={{ height: "400px" }}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove} // Only need handleMouseMove now
+        onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave} // Use modified handleMouseLeave
+        onMouseLeave={handleMouseLeave}
       >
-        {/* Scaled image container */}
         <div
           className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           style={{
@@ -549,10 +496,9 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
             style={{ display: "block", pointerEvents: "none" }}
           />
 
-          {/* Crop overlay */}
           {crop && (
             <div
-              className="absolute border-2 border-white shadow-lg pointer-events-none" // Ensure overlay doesn't interfere with mouse events on container
+              className="absolute border-2 border-white shadow-lg pointer-events-none"
               style={{
                 top: crop.y,
                 left: crop.x,
@@ -562,15 +508,11 @@ export function ImageCropper({ imageUrl, onCropChange }: ImageCropperProps) {
               }}
             >
               <div className="absolute inset-0 border border-white border-dashed" />
-
-              {/* REMOVED: Resize handles */}
-              {/* <div className="absolute w-4 h-4 ... /> ... */}
             </div>
           )}
         </div>
       </div>
 
-      {/* Help text remains the same */}
       <div className="text-center text-sm text-muted-foreground">
         <p>Drag the center to move the crop area. Use inputs to resize.</p>
       </div>
