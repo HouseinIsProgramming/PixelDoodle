@@ -303,7 +303,7 @@ export function ImageAdjuster({
                 <img
                   src={selectedImage.processedUrl || "/placeholder.svg"}
                   alt="Preview"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain bg-stone-300"
                 />
                 {(selectedImage.isProcessing || isAdjusting) && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -345,7 +345,7 @@ export function ImageAdjuster({
               <img
                 src={image.processedUrl || "/placeholder.svg"}
                 alt="Thumbnail"
-                className="h-16 w-16 object-cover"
+                className="h-16 w-16 object-cover bg-stone-300"
               />
               {image.isProcessing && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">

@@ -87,7 +87,7 @@ export function ImagePreview({
                 <img
                   src={image.processedUrl || "/placeholder.svg"}
                   alt="Processed thumbnail"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full bg-stone-300 object-cover"
                 />
               </div>
             </div>
@@ -102,7 +102,7 @@ export function ImagePreview({
               <img
                 src={selectedImage.processedUrl || "/placeholder.svg"}
                 alt="Processed"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain bg-stone-300"
               />
               <div className="absolute top-2 right-2">
                 <Button
@@ -134,7 +134,7 @@ export function ImagePreview({
                   <img
                     src={selectedImage.processedUrl || "/placeholder.svg"}
                     alt="Processed"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain bg-stone-300"
                   />
                 </div>
               </div>
