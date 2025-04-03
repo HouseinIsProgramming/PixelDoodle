@@ -1,5 +1,7 @@
 Hosted on <a href="https://me.houseinaboshaar.com/pixeldoodle">https://me.houseinaboshaar.com/pixeldoodle/</a> for free use.
 
+This was made as a "24 hour challenge" for myself to see what I can learn about working with images on a client sided web app.
+
 Easily turn multiple handwritten papers/notes/most importantly doodles into digitilsed images, with the options to crop, adjust brightness and contrast and to remove all non-black pixels.
 
 <img width="1009" alt="Screenshot 2025-03-31 at 06 49 38" src="https://github.com/user-attachments/assets/ea7e2471-7a14-429d-9b93-f792bf2150b4" />
