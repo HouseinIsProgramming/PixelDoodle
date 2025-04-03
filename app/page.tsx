@@ -1,8 +1,10 @@
 import { ImageProcessor } from "@/components/image-processor";
 import Image from "next/image";
+import { Github } from "lucide-react";
 
 import pixelsvg from "../app/Pixel.svg";
 import doodlesvg from "../app/Doodle.svg";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
@@ -29,6 +31,17 @@ export default function Home() {
           priority
         />
       </div>
+
+      <h2 className="text-center mb-6 text-2xl font-bold hover:drop-shadow-xl">
+        <a
+          target="_blank"
+          href="https://github.com/HouseinIsProgramming/PixelDoodle"
+        >
+          <Button size={"default"} variant={"outline"}>
+            See on Github <Github />
+          </Button>
+        </a>
+      </h2>
 
       <p className="text-center mb-8 text-muted-foreground">
         Upload your notes/images and turn them into digitized notes, best used
